@@ -6,8 +6,13 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.AudioTrack;
+import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -15,34 +20,53 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     TextView tv1;
     Button startb,stopb;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        tv1 = findViewById(R.id.textView1);
         startb=findViewById(R.id.button);
         stopb=findViewById(R.id.button2);
+        Constants.freqLookup = new HashMap<>();
+        Constants.freqLookup.put(200,200);
+        Constants.freqLookup.put(2016,1640);
+        Constants.freqLookup.put(2953,2438);
+        Constants.freqLookup.put(3985,3282);
+        Constants.freqLookup.put(4969,4078);
         Constants.et1=findViewById(R.id.editTextNumber);
         Constants.et2=findViewById(R.id.editTextNumber2);
         Constants.et3=findViewById(R.id.editTextNumber3);
-        Constants.et4=findViewById(R.id.editTextNumber4);
         Constants.et5=findViewById(R.id.editTextNumber5);
         Constants.et6=findViewById(R.id.editTextNumber6);
-        Constants.et7=findViewById(R.id.editTextNumber7);
-        Constants.et8=findViewById(R.id.editTextNumber8);
-        Constants.et9=findViewById(R.id.editTextNumber9);
-        Constants.sw1=findViewById(R.id.switch1);
-        Constants.sw2=findViewById(R.id.switch2);
+        Constants.spinner = findViewById(R.id.spinner1);
         String[] perms = new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+
+        // you need to have a list of data that you want the spinner to display
+        List<String> spinnerArray =  new ArrayList<String>();
+        spinnerArray.add("200");
+        spinnerArray.add("2016");
+        spinnerArray.add("2953");
+        spinnerArray.add("3985");
+        spinnerArray.add("4969");
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                this, android.R.layout.simple_spinner_item, spinnerArray);
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        Constants.spinner.setAdapter(adapter);
 
         ActivityCompat.requestPermissions(this,
                 perms,
@@ -118,31 +142,17 @@ public class MainActivity extends AppCompatActivity {
                                       int before, int count) {
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
                 String ss = Constants.et3.getText().toString();
-                if (ss.length()>0) {
-                    editor.putInt("fstart", Integer.parseInt(ss));
-                    editor.commit();
-                    Constants.fstart = Integer.parseInt(ss);
+                boolean store=true;
+                try {
+                    float ff=Float.parseFloat(ss);
                 }
-            }
-        });
-
-        Constants.et4.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
-            }
-            @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
-                String ss = Constants.et4.getText().toString();
-                if (ss.length()>0) {
-                    editor.putInt("fend", Integer.parseInt(ss));
+                catch(Exception e) {
+                    store=false;
+                }
+                if (store) {
+                    editor.putFloat("volume", Float.parseFloat(ss));
                     editor.commit();
-                    Constants.fend = Integer.parseInt(ss);
+                    Constants.volume = Float.parseFloat(ss);
                 }
             }
         });
@@ -189,107 +199,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        Constants.et7.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
-            }
-            @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
-                String ss = Constants.et7.getText().toString();
-                boolean store=true;
-                try {
-                    float ff=Float.parseFloat(ss);
-                }
-                catch(Exception e) {
-                    store=false;
-                }
-                if (store) {
-                    editor.putFloat("chirp_len", Float.parseFloat(ss));
-                    editor.commit();
-                    Constants.chirp_len = Float.parseFloat(ss);
-                }
-            }
-        });
-
-        Constants.et8.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
-            }
-            @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
-                String ss = Constants.et8.getText().toString();
-                boolean store=true;
-                try {
-                    float ff=Float.parseFloat(ss);
-                }
-                catch(Exception e) {
-                    store=false;
-                }
-                if (store) {
-                    editor.putFloat("gap_len", Float.parseFloat(ss));
-                    editor.commit();
-                    Constants.gap_len = Float.parseFloat(ss);
-                }
-            }
-        });
-        Constants.et9.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
-            }
-            @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
-                String ss = Constants.et9.getText().toString();
-                if (ss.length()>0) {
-                    editor.putInt("file_num", Integer.parseInt(ss));
-                    editor.commit();
-                    Constants.init_sleep = Integer.parseInt(ss);
-                }
-            }
-        });
-
-        Constants.sw1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
-                editor.putBoolean("transmit", isChecked);
-                editor.commit();
-                Constants.transmit  = isChecked;
-            }
-        });
-        Constants.sw2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(av).edit();
-                editor.putBoolean("chirp", isChecked);
-                editor.commit();
-                Constants.chirp  = isChecked;
-                Constants.et3.setEnabled(isChecked);
-                Constants.et4.setEnabled(isChecked);
-                Constants.et5.setEnabled(isChecked);
-                Constants.et7.setEnabled(isChecked);
-                Constants.et8.setEnabled(isChecked);
-                Constants.et9.setEnabled(!isChecked);
-            }
-        });
     }
 
     public static short[] scale(short[] vals, float scale) {
@@ -300,36 +209,91 @@ public class MainActivity extends AppCompatActivity {
     }
 
     SendChirpAsyncTask task;
+
+    public void sendTone(int freq) {
+        int f1 = Constants.freqLookup.get(freq);
+        int f2 = freq;
+
+        short[] pulse;
+
+        float vol3a = Constants.scale1;
+        float vol3b = Constants.scale2;
+
+        pulse = SignalGenerator.sine2speaker(f1, f2,
+                Constants.samplingRate,
+                Constants.rec_len*Constants.samplingRate,
+                vol3a,
+                vol3b);
+
+        Log.e("out","speaker "+f1+","+f2);
+
+        float vol1 = Constants.volume;
+
+        AudioStreamer sp = new AudioStreamer(this, pulse, Constants.samplingRate*Constants.rec_len*2,
+                Constants.samplingRate, AudioManager.STREAM_SYSTEM,vol1,false);
+
+        int micType;
+//        if (Constants.AGC) {
+//            AudioManager audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+//            if (audioManager.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) != null) {
+//                micType = (MediaRecorder.AudioSource.UNPROCESSED);
+//            } else {
+//                micType = (MediaRecorder.AudioSource.VOICE_RECOGNITION);
+//            }
+//        }
+//        else {
+            micType = MediaRecorder.AudioSource.DEFAULT;
+//        }
+
+        try {
+            sp.play(-1);
+            Thread.sleep((long) (Constants.rec_len*1000));
+
+            Log.e("asdf","stop it");
+            sp.stopit();
+
+//            while (orec.recording||
+//                    orec.rec.getState()!= AudioRecord.RECORDSTATE_STOPPED||
+//                    sp.track1.getPlayState() != AudioTrack.PLAYSTATE_STOPPED) {
+//                Thread.sleep(100);
+//            }
+
+            Log.e("asdf","STOP");
+
+        } catch (Exception e) {
+            Log.e("ex","sendtone");
+            Log.e("ex",e.getMessage());
+        }
+    }
+
     public void onstart(View v) {
-        Log.e("asdf","onstart");
-        String ts = System.currentTimeMillis() + "";
-        String trim=ts.substring(ts.length()-4,ts.length());
-        tv1.setText(trim);
+        sendTone(Integer.parseInt(Constants.spinner.getSelectedItem().toString()));
 
-        if (Constants.chirp) {
-            task = new SendChirpAsyncTask(this, ts + ".txt", startb, stopb, null);
-            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-        else {
-            short[] vals=null;
-            if (Constants.file_num == 1) {
-                vals=FileOperations.readrawasset(this, R.raw.oceansig1);
-            }
-            else if (Constants.file_num == 2) {
-                vals=FileOperations.readrawasset(this, R.raw.oceansig2);
-            }
-            else if (Constants.file_num == 3) {
-                vals=FileOperations.readrawasset(this, R.raw.oceansig3);
-            }
-            else if (Constants.file_num == 4) {
-                vals=FileOperations.readrawasset(this, R.raw.oceansig4);
-            }
-            Log.e("asdf","read file "+Constants.file_num+" : "+(vals.length/Constants.SamplingRate));
-            vals=scale(vals,Constants.scale1);
+//        if (Constants.chirp) {
+//            task = new SendChirpAsyncTask(this, ts + ".txt", startb, stopb, null);
+//            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//        }
+//        else {
+//            short[] vals=null;
+//            if (Constants.file_num == 1) {
+//                vals=FileOperations.readrawasset(this, R.raw.oceansig1);
+//            }
+//            else if (Constants.file_num == 2) {
+//                vals=FileOperations.readrawasset(this, R.raw.oceansig2);
+//            }
+//            else if (Constants.file_num == 3) {
+//                vals=FileOperations.readrawasset(this, R.raw.oceansig3);
+//            }
+//            else if (Constants.file_num == 4) {
+//                vals=FileOperations.readrawasset(this, R.raw.oceansig4);
+//            }
+//            Log.e("asdf","read file "+Constants.file_num+" : "+(vals.length/Constants.SamplingRate));
+//            vals=scale(vals,Constants.scale1);
+//
+//            task = new SendChirpAsyncTask(this, ts + ".txt", startb, stopb, vals);
+//            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-            task = new SendChirpAsyncTask(this, ts + ".txt", startb, stopb, vals);
-            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
+//        }
     }
 
     public void onstop(View v) {
